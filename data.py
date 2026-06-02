@@ -299,10 +299,21 @@ def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=
 @st.cache_data(ttl=300)
 def get_regional_data(from_year=None, from_month=None, to_year=None, to_month=None) -> list:
     df = _read_sheet("Tab2_Regional", header_row=0).copy()
-    pos_cols = ["name","year","month","ul","nl","apt","quote","cust","sales",
-                "nlc","nl_sales","leads_pct","sales_pct","apt_leads","order_apt","order_leads"]
-    df = df.iloc[:, :len(pos_cols)]
-    df.columns = pos_cols[:len(df.columns)]
+    # Use actual Google Sheet header names — more reliable than positional
+    header_map = {
+        "Regional Office":"name","Year":"year","Month":"month",
+        "Unique Leads":"ul","New Leads":"nl",
+        "Appointments":"apt","Apt":"apt","Quote":"quote",
+        "Customers":"cust","Sales Amount":"sales",
+        "NL Customers":"nlc","NL Sales":"nl_sales",
+        "% of Total":"leads_pct","$ Sales % of Total":"sales_pct",
+        "Apt/Leads":"apt_leads","Order/Apt":"order_apt","Order/Leads":"order_leads",
+    }
+    df = df.rename(columns={c: header_map[c] for c in df.columns if c in header_map})
+    for col in ["name","year","month","ul","nl","apt","quote","cust","sales","nlc","nl_sales",
+                "leads_pct","sales_pct","apt_leads","order_apt","order_leads"]:
+        if col not in df.columns:
+            df[col] = pd.NA
     df = df.dropna(subset=["name"])
     df = df[~df["name"].astype(str).str.contains("row|update|office|regional|add new", case=False, na=False)]
 
