@@ -28,7 +28,7 @@ def _gspread_client():
 
 @st.cache_data(ttl=300)
 def _read_sheet(tab_name: str, header_row: int = 0) -> pd.DataFrame:
-    """Fetch worksheet via gspread — cached for 5 min to avoid API quota errors."""
+    """Fetch worksheet via gspread — cached 5 min to avoid quota errors."""
     gc = _gspread_client()
     ws = gc.open_by_key(SHEET_ID).worksheet(tab_name)
     rows = ws.get_all_values()
@@ -48,18 +48,13 @@ def _read_sheet(tab_name: str, header_row: int = 0) -> pd.DataFrame:
 def get_campaigns():
     """Load only active campaigns (non-zero TY Cost or TY Leads) from Tab1_KPI sheet."""
     try:
-        import pandas as pd
         df = _read_sheet("Tab1_KPI", header_row=0)
-        col_names = [
-            "campaign",
-            "ty_conv","ty_conv_invoca","ty_conv_form",
-            "ty_cost",
-            "ty_leads","ty_crm_invoca","ty_crm_form",
-            "ty_apt","ty_cust","ty_cpl","ty_cpa","ty_roi",
-            "ly_conv","ly_cost","ly_leads","ly_apt","ly_cust","ly_cpl","ly_cpa","ly_roi",
-            "lyf_conv","lyf_cost","lyf_leads","lyf_apt","lyf_cust",
-            "bud_cost","lm_leads","lm_apt","date",
-        ]
+        col_names = ["campaign","ty_conv","ty_conv_invoca","ty_conv_form","ty_cost",
+                     "ty_leads","ty_crm_invoca","ty_crm_form","ty_apt","ty_cust",
+                     "ty_cpl","ty_cpa","ty_roi","ly_conv","ly_cost","ly_leads",
+                     "ly_apt","ly_cust","ly_cpl","ly_cpa","ly_roi","lyf_conv",
+                     "lyf_cost","lyf_leads","lyf_apt","lyf_cust","bud_cost",
+                     "lm_leads","lm_apt","date"]
         df = df.iloc[:, :len(col_names)]
         df.columns = col_names[:len(df.columns)]
         campaigns = {}
