@@ -638,12 +638,20 @@ with tab2:
     offices_sorted = sorted(offices, key=lambda o: to_float(o.get("leads_pct","0")), reverse=True)
 
     for i, o in enumerate(offices_sorted):
-        # Read % values directly from Excel — no calculation
-        lp_str = str(o.get("leads_pct","0%"))
-        sp_str = str(o.get("sales_pct","0%"))
-        al_str = str(o.get("apt_leads","0%"))
-        oa_str = str(o.get("order_apt","0%"))
-        ol_str = str(o.get("order_leads","0%"))
+        def fix_pct_val(val):
+            try:
+                s = str(val).replace("%","").strip()
+                f = float(s)
+                if f < 1:  # decimal form like 0.277 → 27.7%
+                    return f"{f*100:.2f}%"
+                return f"{f:.2f}%"
+            except:
+                return "0.00%"
+        lp_str = fix_pct_val(o.get("leads_pct","0"))
+        sp_str = fix_pct_val(o.get("sales_pct","0"))
+        al_str = fix_pct_val(o.get("apt_leads","0"))
+        oa_str = fix_pct_val(o.get("order_apt","0"))
+        ol_str = fix_pct_val(o.get("order_leads","0"))
         office_key = o["name"].replace(" ","_").replace("/","_")
 
         # For pie chart use numeric value
