@@ -299,6 +299,8 @@ def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=
 @st.cache_data(ttl=300)
 def get_regional_data(from_year=None, from_month=None, to_year=None, to_month=None) -> list:
     df = _read_sheet("Tab2_Regional", header_row=0).copy()
+    # Debug: show actual column names from Google Sheet
+    st.write("DEBUG Tab2_Regional columns:", df.columns.tolist())
     # Use actual Google Sheet header names — more reliable than positional
     header_map = {
         "Regional Office":"name","Year":"year","Month":"month",
