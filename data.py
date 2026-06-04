@@ -299,11 +299,12 @@ def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=
 @st.cache_data(ttl=300)
 def get_regional_data(from_year=None, from_month=None, to_year=None, to_month=None) -> list:
     df = _read_sheet("Tab2_Regional", header_row=0).copy()
-    # Debug: show actual column names from Google Sheet
-    st.write("DEBUG Tab2_Regional columns:", df.columns.tolist())
-    # Use actual Google Sheet header names — more reliable than positional
+    # Bing Tab2_Regional columns: Regional Office, Year, Month, Campaign,
+    # Unique Leads, New Leads, Appointments, Quote, Customers, Sales Amount,
+    # NL Customers, NL Sales (no % columns in this sheet)
     header_map = {
         "Regional Office":"name","Year":"year","Month":"month",
+        "Campaign":"campaign",
         "Unique Leads":"ul","New Leads":"nl",
         "Appointments":"apt","Apt":"apt","Quote":"quote",
         "Customers":"cust","Sales Amount":"sales",
@@ -350,17 +351,30 @@ def get_regional_data(from_year=None, from_month=None, to_year=None, to_month=No
             v = str(row.get(f,"")).strip()
             if v and v != "nan": offices[name][f] = v
 
-    return [dict(
-        name=name,
-        ul=int(d["ul"]), nl=int(d["nl"]), apt=int(d["apt"]),
-        quote=int(d["quote"]), cust=int(d["cust"]),
-        sales=d["sales"], nlc=int(d["nlc"]), nl_sales=d["nl_sales"],
-        leads_pct=d["leads_pct"] or "0%",
-        sales_pct=d["sales_pct"] or "0%",
-        apt_leads=d["apt_leads"] or "0%",
-        order_apt=d["order_apt"] or "0%",
-        order_leads=d["order_leads"] or "0%",
-    ) for name, d in offices.items()]
+    # Calculate totals for % computation (used when sheet lacks % columns)
+    total_nl    = sum(d["nl"]    for d in offices.values()) or 1
+    total_sales = sum(d["sales"] for d in offices.values()) or 1
+
+    result = []
+    for name, d in offices.items():
+        nl    = d["nl"]
+        apt   = d["apt"]
+        cust  = d["cust"]
+        sales = d["sales"]
+        lp = d["leads_pct"] or f"{nl/total_nl*100:.2f}%"
+        sp = d["sales_pct"] or f"{sales/total_sales*100:.2f}%"
+        al = d["apt_leads"] or (f"{apt/nl*100:.2f}%" if nl else "0%")
+        oa = d["order_apt"] or (f"{cust/apt*100:.2f}%" if apt else "0%")
+        ol = d["order_leads"] or (f"{cust/nl*100:.2f}%" if nl else "0%")
+        result.append(dict(
+            name=name,
+            ul=int(d["ul"]), nl=int(nl), apt=int(apt),
+            quote=int(d["quote"]), cust=int(cust),
+            sales=sales, nlc=int(d["nlc"]), nl_sales=d["nl_sales"],
+            leads_pct=lp, sales_pct=sp,
+            apt_leads=al, order_apt=oa, order_leads=ol,
+        ))
+    return result
 
 
 # ── Tab 3: Campaign Performance ───────────────────────────────────────────────
