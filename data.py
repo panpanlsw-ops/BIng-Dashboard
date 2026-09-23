@@ -244,7 +244,7 @@ def get_roi_data(campaign: str, start_date: date, end_date: date) -> dict:
 def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=None) -> dict:
     """Reads campaign breakdown per regional office from Tab2_Regional_Detail, filtered by date range."""
     try:
-        df = _read_sheet("Tab2_Regional_Detail", header_row=0)
+        df = _read_sheet("Tab2_Regional", header_row=0)
         col_names = ["region","year","month","campaign","ul","nl","apt","quote","cust","sales","nlc","nl_sales"]
         df = df.iloc[:, :len(col_names)]
         df.columns = col_names
@@ -252,6 +252,9 @@ def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=
         df = df.dropna(subset=["region","campaign"])
         df["region"]   = df["region"].astype(str).str.replace("–","-").str.strip()
         df["campaign"] = df["campaign"].astype(str).str.replace("–","-").str.strip()
+        # Filter out header row if included
+        df = df[df["region"] != "Regional Office"]
+        df = df[df["campaign"] != "Campaign"]
 
         MONTH_MAP = {"Jan":1,"Feb":2,"Mar":3,"Apr":4,"May":5,"Jun":6,
                      "Jul":7,"Aug":8,"Sep":9,"Oct":10,"Nov":11,"Dec":12,
