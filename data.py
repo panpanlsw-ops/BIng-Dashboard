@@ -244,7 +244,7 @@ def get_roi_data(campaign: str, start_date: date, end_date: date) -> dict:
 def get_regional_detail(from_year=None, from_month=None, to_year=None, to_month=None) -> dict:
     """Reads campaign breakdown per regional office from Tab2_Regional_Detail, filtered by date range."""
     try:
-        df = _read_sheet("Tab2_Regional_Detail", header_row=1)
+        df = _read_sheet("Tab2_Regional_Detail", header_row=0)
         col_names = ["region","year","month","campaign","ul","nl","apt","quote","cust","sales","nlc","nl_sales"]
         df = df.iloc[:, :len(col_names)]
         df.columns = col_names
